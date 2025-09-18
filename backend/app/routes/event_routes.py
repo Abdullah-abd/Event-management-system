@@ -1,9 +1,15 @@
 # app/routes/event_routes.py
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
+from typing import Optional
 from .. import database, models, schemas, auth
+import os
 
 router = APIRouter(prefix="/events", tags=["Events"])
+
+# Directory to save uploaded images
+IMAGE_DIR = "static/images"
+os.makedirs(IMAGE_DIR, exist_ok=True)
 
 # ---------------------------
 # 🟢 Get all events (any user)
@@ -25,18 +31,35 @@ def get_event(event_id: int, db: Session = Depends(database.get_db)):
 
 
 # ---------------------------
-# 🔴 Create new event (admin only)
+# 🔴 Create new event (admin only) with optional image upload
 # ---------------------------
 @router.post("/", response_model=schemas.EventResponse)
-def create_event(
-    event: schemas.EventCreate,
+async def create_event(
+    title: str = Form(...),
+    description: str = Form(...),
+    date: str = Form(...),
+    time: str = Form(...),
+    image: Optional[UploadFile] = File(None),
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(auth.get_current_user)
 ):
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Only admin can add events")
 
-    new_event = models.Event(**event.dict())
+    image_url = None
+    if image:
+        file_path = os.path.join(IMAGE_DIR, image.filename)
+        with open(file_path, "wb") as f:
+            f.write(await image.read())
+        image_url = f"/{IMAGE_DIR}/{image.filename}"  # URL accessible
+
+    new_event = models.Event(
+        title=title,
+        description=description,
+        date=date,
+        time=time,
+        image_url=image_url
+    )
     db.add(new_event)
     db.commit()
     db.refresh(new_event)
@@ -44,14 +67,16 @@ def create_event(
 
 
 # ---------------------------
-# 🟠 Update event (admin only)
+# 🟠 Update event (admin only) with optional image upload
 # ---------------------------
 @router.put("/{event_id}", response_model=schemas.EventResponse)
-def update_event(
+async def update_event(
     event_id: int,
-    updated_data: schemas.EventUpdate,
+    title: Optional[str] = Form(None),
+    description: Optional[str] = Form(None),
+    image: Optional[UploadFile] = File(None),
     db: Session = Depends(database.get_db),
-    current_user: dict = Depends(auth.get_current_user)
+    current_user: models.User = Depends(auth.get_current_user)
 ):
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Only admin can update events")
@@ -60,15 +85,16 @@ def update_event(
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
 
-    update_dict = updated_data.dict(exclude_unset=True)
+    if title is not None:
+        event.title = title
+    if description is not None:
+        event.description = description
 
-    # 🟢 Convert empty strings to None
-    for key, value in list(update_dict.items()):
-        if value == "":
-            update_dict.pop(key)  # ⛔️ don’t overwrite with NULL
-
-    for key, value in update_dict.items():
-        setattr(event, key, value)
+    if image:
+        file_path = os.path.join(IMAGE_DIR, image.filename)
+        with open(file_path, "wb") as f:
+            f.write(await image.read())
+        event.image_url = f"/{IMAGE_DIR}/{image.filename}"
 
     db.commit()
     db.refresh(event)
