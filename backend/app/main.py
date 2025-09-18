@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends
 from fastapi.security import HTTPBearer
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-
+from fastapi.middleware.cors import CORSMiddleware
 from . import models
 from .database import engine, get_db
 from .routes import auth_routes  # ✅ import router
@@ -14,7 +14,20 @@ app = FastAPI(title="Event Management System")
 bearer_scheme = HTTPBearer()
 app.include_router(auth_routes.router)  # ✅ add routes
 app.include_router(event_routes.router) # ✅ add routes
+# Allow your frontend origin
+origins = [
+    "http://localhost:3000",   # Next.js local dev
+    "http://127.0.0.1:3000",
+    # add production domain here
+]
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,         # or ["*"] for all origins
+    allow_credentials=True,
+    allow_methods=["*"],           # allows GET, POST, PUT, DELETE, OPTIONS
+    allow_headers=["*"],           # allows headers like Content-Type, Authorization
+)
 @app.get("/")
 def root():
     return {"message": "Event Management Backend is running 🚀"}

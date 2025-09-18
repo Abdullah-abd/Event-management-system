@@ -32,8 +32,6 @@ export default function Login() {
       } else {
         router.push("/user");
       }
-
-      alert("Login successful!");
     } catch (err) {
       console.error("Login error:", err);
       alert(err.response?.data?.error || err.message || "Login failed");
