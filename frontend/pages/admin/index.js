@@ -16,6 +16,7 @@ const AdminEvents = () => {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch events on mount
   useEffect(() => {
@@ -33,6 +34,13 @@ const AdminEvents = () => {
       setLoading(false);
     }
   };
+
+  // Filtered events based on search
+  const filteredEvents = events.filter((event) =>
+    (event.title || event.name)
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase())
+  );
 
   // Handle Add Event
   const handleSaveAdd = async (newEventData) => {
@@ -81,7 +89,9 @@ const AdminEvents = () => {
       <div className="flex items-center gap-4 mb-6">
         <input
           type="text"
-          placeholder="Search events..."
+          placeholder="Search by title..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
           className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
         />
         <button
@@ -95,11 +105,11 @@ const AdminEvents = () => {
       {/* Event Cards */}
       {loading ? (
         <p>Loading events...</p>
-      ) : events.length === 0 ? (
+      ) : filteredEvents.length === 0 ? (
         <p>No events found.</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {events.map((event) => (
+          {filteredEvents.map((event) => (
             <EventCard
               key={event.id}
               event={event}
