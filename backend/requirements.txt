@@ -1,6 +1,5 @@
 fastapi==0.103.0
-pydantic==2.5.3
-uvicorn[standard]
+uvicorn==0.23.1
 sqlalchemy
 psycopg2-binary
 python-jose
