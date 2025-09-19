@@ -19,8 +19,9 @@ app.include_router(event_routes.router) # ✅ add routes
 origins = [
     "http://localhost:3000",   # Next.js local dev
     "http://127.0.0.1:3000",
-    # add production domain here
+    "https://event-management-system-r5gc.onrender.com",  # Production domain (frontend)
 ]
+
 # serve uploaded images
 
 UPLOAD_DIR = "uploads"

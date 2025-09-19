@@ -10,7 +10,7 @@ import uuid
 from .. import database, models, schemas, auth
 
 router = APIRouter(prefix="/events", tags=["Events"])
-BASE_URL = "http://127.0.0.1:8000"
+BASE_URL = "https://event-management-system-r5gc.onrender.com"
 
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
