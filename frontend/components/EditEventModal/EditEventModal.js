@@ -1,26 +1,46 @@
 "use client";
 import { useEffect, useState } from "react";
+import { updateEvent } from "../../utils/api"; // API helper for PUT request
 
 export default function EditEventModal({ isOpen, onClose, onSave, event }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [image_url, setImageUrl] = useState("");
+  const [imageFile, setImageFile] = useState(null);
 
   useEffect(() => {
     if (event) {
       setTitle(event.title || "");
       setDescription(event.description || "");
-      setImageUrl(event.image_url || "");
+      setImageFile(null); // reset file input
     }
   }, [event]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSave({
-      title,
-      description,
-      image_url,
-    });
+
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("description", description);
+    if (imageFile) {
+      formData.append("image_url", imageFile); // same as AddEventModal
+    }
+
+    try {
+      const data = await updateEvent(event.id, formData); // send PUT request
+      console.log("Event updated:", data);
+
+      if (onSave) {
+        onSave(data); // callback to update state in AdminEvents
+      }
+
+      // Reset form
+      setTitle("");
+      setDescription("");
+      setImageFile(null);
+      onClose();
+    } catch (error) {
+      console.error("Error updating event:", error);
+    }
   };
 
   if (!isOpen) return null;
@@ -45,13 +65,12 @@ export default function EditEventModal({ isOpen, onClose, onSave, event }) {
             className="w-full border px-3 py-2 rounded-lg"
             required
           />
+          {/* File Upload */}
           <input
-            type="text"
-            placeholder="Image URL"
-            value={image_url}
-            onChange={(e) => setImageUrl(e.target.value)}
+            type="file"
+            accept="image/*"
+            onChange={(e) => setImageFile(e.target.files[0])}
             className="w-full border px-3 py-2 rounded-lg"
-            required
           />
           <div className="flex justify-end gap-2 mt-4">
             <button

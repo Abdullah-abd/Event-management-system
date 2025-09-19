@@ -3,12 +3,7 @@ import { useEffect, useState } from "react";
 import AddEventModal from "../../components/AddEvent/AddEventModal";
 import EditEventModal from "../../components/EditEventModal/EditEventModal";
 import EventCard from "../../components/EventCard/EventCard";
-import {
-  createEvent,
-  deleteEvent,
-  getEvents,
-  updateEvent,
-} from "../../utils/api";
+import { deleteEvent, getEvents } from "../../utils/api"; // ✅ only fetch + delete here
 
 const AdminEvents = () => {
   const [events, setEvents] = useState([]);
@@ -42,27 +37,19 @@ const AdminEvents = () => {
       .includes(searchQuery.toLowerCase())
   );
 
-  // Handle Add Event
-  const handleSaveAdd = async (newEventData) => {
-    try {
-      const created = await createEvent(newEventData);
-      setEvents((prev) => [...prev, created]);
-      setIsAddOpen(false);
-    } catch (err) {
-      console.error("Error creating event:", err);
-    }
+  // Handle Add Event → just update state
+  const handleSaveAdd = (newEvent) => {
+    setEvents((prev) => [...prev, newEvent]);
+    setIsAddOpen(false);
   };
 
-  // Handle Edit Event
-  const handleSaveEdit = async (updatedData) => {
-    try {
-      const updated = await updateEvent(selectedEvent.id, updatedData);
-      setEvents((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
-      setIsEditOpen(false);
-      setSelectedEvent(null);
-    } catch (err) {
-      console.error("Error updating event:", err);
-    }
+  // Handle Edit Event → just update state
+  const handleSaveEdit = (updatedEvent) => {
+    setEvents((prev) =>
+      prev.map((e) => (e.id === updatedEvent.id ? updatedEvent : e))
+    );
+    setIsEditOpen(false);
+    setSelectedEvent(null);
   };
 
   const handleDelete = async (id) => {

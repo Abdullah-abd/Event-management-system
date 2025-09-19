@@ -1,10 +1,12 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional
-from datetime import datetime
-from pydantic import BaseModel
-from typing import Optional
-from datetime import date, time 
-# ✅ User schemas
+from datetime import datetime, date, time
+from pydantic.utils import GetterDict
+
+# ----------------------
+# User Schemas
+# ----------------------
+
 class UserBase(BaseModel):
     name: str
     email: EmailStr
@@ -24,7 +26,11 @@ class UserResponse(UserBase):
     class Config:
         orm_mode = True
 
-# ✅ Token schemas
+
+# ----------------------
+# Token Schemas
+# ----------------------
+
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
@@ -32,6 +38,8 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     email: Optional[str] = None
     role: Optional[str] = None
+
+
 # ----------------------
 # Event Schemas
 # ----------------------
@@ -41,7 +49,6 @@ class EventBase(BaseModel):
     description: Optional[str] = None
     date: date
     time: time
-    image_url: Optional[str] = None
 
 
 class EventCreate(EventBase):
@@ -53,13 +60,26 @@ class EventUpdate(BaseModel):
     description: Optional[str] = None
     date: Optional[date] = None
     time: Optional[time] = None
-    image_url: Optional[str] = None
+    # Image handled via UploadFile in route
 
 
-class EventResponse(EventBase):
+class EventGetter(GetterDict):
+    def get(self, key, default=None):
+        if key == "image":
+            return getattr(self._obj, "image", None)  # ✅ fixed to match DB
+        return getattr(self._obj, key, default)
+
+
+class EventResponse(BaseModel):
     id: int
+    title: str
+    description: Optional[str] = None
+    date: date
+    time: time
+    image_url: Optional[str] = None  # ✅ frontend will receive this field
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
     class Config:
-        from_attributes = True  # ⚡ Pydantic v2 support for ORM models
+        orm_mode = True
+        getter_dict = EventGetter
