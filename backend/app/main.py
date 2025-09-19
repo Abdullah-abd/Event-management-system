@@ -19,7 +19,7 @@ app.include_router(event_routes.router) # ✅ add routes
 origins = [
     "http://localhost:3000",   # Next.js local dev
     "http://127.0.0.1:3000",
-    "https://event-management-system-r5gc.onrender.com",  # Production domain (frontend)
+    "https://event-management-system-seven-mu.vercel.app/",  # Production domain (frontend)
 ]
 
 # serve uploaded images
