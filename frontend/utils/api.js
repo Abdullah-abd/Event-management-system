@@ -1,14 +1,15 @@
 // utils/api.js
 import axios from "axios";
 
-const API_BASE_URL = "http://127.0.0.1:8000";
+// 🚨 Remove the trailing slash
+const API_BASE_URL = "https://event-management-system-r5gc.onrender.com";
 
 // Create axios instance
 const api = axios.create({
   baseURL: API_BASE_URL,
 });
 
-// Always attach token (no skipping here)
+// Always attach token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
@@ -43,7 +44,7 @@ export const login = async (data) => {
 // Public (no auth)
 export const getEvents = async () => {
   try {
-    const res = await axios.get(`${API_BASE_URL}/events/`); // plain axios, no auth
+    const res = await api.get("/events/"); // ✅ use api, not plain axios
     return res.data;
   } catch (err) {
     throw err.response || err;
