@@ -2,12 +2,13 @@ from fastapi import FastAPI, Depends
 from fastapi.security import HTTPBearer
 from sqlalchemy.orm import Session
 from sqlalchemy import text
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from . import models
 from .database import engine, get_db
 from .routes import auth_routes  # ✅ import router
 from .routes import event_routes
-
+import os
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Event Management System")
@@ -20,6 +21,12 @@ origins = [
     "http://127.0.0.1:3000",
     # add production domain here
 ]
+# serve uploaded images
+
+UPLOAD_DIR = "uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 app.add_middleware(
     CORSMiddleware,

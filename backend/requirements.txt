@@ -7,3 +7,5 @@ passlib[bcrypt]
 pydantic
 python-dotenv
 alembic   # optional for migrations
+python-multipart
+python-dotenv
