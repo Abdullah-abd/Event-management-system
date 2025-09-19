@@ -19,7 +19,7 @@ app.include_router(event_routes.router) # ✅ add routes
 origins = [
     "http://localhost:3000",   # Next.js local dev
     "http://127.0.0.1:3000",
-    "https://event-management-system-seven-mu.vercel.app/",  # Production domain (frontend)
+    "https://event-management-system-seven-mu.vercel.app",  # Production domain (frontend)
 ]
 
 # serve uploaded images
@@ -28,7 +28,7 @@ UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
-
+origins = ["*"]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,         # or ["*"] for all origins
