@@ -11,3 +11,7 @@ venv/
 # Editor
 .vscode/
 .idea/
+
+# Frontend
+node_modules/
+.next/

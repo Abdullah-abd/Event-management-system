@@ -1,42 +1,3 @@
-# app/routes/event_routes.py
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
-from sqlalchemy.orm import Session
-from datetime import datetime
-import os, shutil
-from pathlib import Path
-import uuid
-
-from .. import database, models, schemas, auth
-
-router = APIRouter(prefix="/events", tags=["Events"])
-BASE_URL = "http://127.0.0.1:8000"
-
-UPLOAD_DIR = "uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-
-# ---------------------------
-# Get all events
-@router.get("/", response_model=list[schemas.EventResponse])
-def get_events(db: Session = Depends(database.get_db)):
-    events = db.query(models.Event).all()
-    for e in events:
-        if e.image_url and not e.image_url.startswith("http"):
-            e.image_url = f"{BASE_URL}{e.image_url}"
-    return events
-
-# ---------------------------
-# Get single event
-@router.get("/{event_id}", response_model=schemas.EventResponse)
-def get_event(event_id: int, db: Session = Depends(database.get_db)):
-    event = db.query(models.Event).filter(models.Event.id == event_id).first()
-    if not event:
-        raise HTTPException(status_code=404, detail="Event not found")
-    if event.image_url and not event.image_url.startswith("http"):
-        event.image_url = f"{BASE_URL}{event.image_url}"
-    return event
-
-# ---------------------------
-# Create new event (admin only)
 # ---------------------------
 # Create new event (admin only)
 @router.post("/", response_model=schemas.EventResponse)
@@ -138,22 +99,3 @@ async def update_event(
         event.image_url = f"{BASE_URL}{event.image_url}"
 
     return event
-
-# ---------------------------
-# Delete event (admin only)
-@router.delete("/{event_id}")
-def delete_event(
-    event_id: int,
-    db: Session = Depends(database.get_db),
-    current_user: models.User = Depends(auth.get_current_user)
-):
-    if current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="Only admin can delete events")
-
-    event = db.query(models.Event).filter(models.Event.id == event_id).first()
-    if not event:
-        raise HTTPException(status_code=404, detail="Event not found")
-
-    db.delete(event)
-    db.commit()
-    return {"message": "Event deleted successfully"}
