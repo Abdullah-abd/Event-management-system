@@ -1,3 +1,41 @@
+# app/routes/event_routes.py
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from sqlalchemy.orm import Session
+from datetime import datetime
+from pathlib import Path
+import os
+import shutil
+import uuid
+
+from .. import database, models, schemas, auth
+
+router = APIRouter(prefix="/events", tags=["Events"])
+BASE_URL = "http://127.0.0.1:8000"
+
+UPLOAD_DIR = "uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+# ---------------------------
+# Get all events
+@router.get("/", response_model=list[schemas.EventResponse])
+def get_events(db: Session = Depends(database.get_db)):
+    events = db.query(models.Event).all()
+    for e in events:
+        if e.image_url and not e.image_url.startswith("http"):
+            e.image_url = f"{BASE_URL}{e.image_url}"
+    return events
+
+# ---------------------------
+# Get single event
+@router.get("/{event_id}", response_model=schemas.EventResponse)
+def get_event(event_id: int, db: Session = Depends(database.get_db)):
+    event = db.query(models.Event).filter(models.Event.id == event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    if event.image_url and not event.image_url.startswith("http"):
+        event.image_url = f"{BASE_URL}{event.image_url}"
+    return event
+
 # ---------------------------
 # Create new event (admin only)
 @router.post("/", response_model=schemas.EventResponse)
@@ -6,7 +44,7 @@ async def create_event(
     description: str = Form(...),
     date: str = Form(...),
     time: str = Form(...),
-    image_url: UploadFile = File(None),  # ✅ name matches frontend
+    image_url: UploadFile = File(None),  # matches frontend
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(auth.get_current_user)
 ):
@@ -20,7 +58,7 @@ async def create_event(
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid date or time format")
 
-    # Handle image upload
+    # Handle image upload safely
     image_path = None
     if image_url:
         ext = Path(image_url.filename).suffix
@@ -41,7 +79,6 @@ async def create_event(
     db.commit()
     db.refresh(new_event)
 
-    # Add BASE_URL for response
     if new_event.image_url and not new_event.image_url.startswith("http"):
         new_event.image_url = f"{BASE_URL}{new_event.image_url}"
 
@@ -56,7 +93,7 @@ async def update_event(
     description: str = Form(None),
     date: str = Form(None),
     time: str = Form(None),
-    image_url: UploadFile = File(None),  # ✅ name matches frontend
+    image_url: UploadFile = File(None),
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(auth.get_current_user)
 ):
@@ -83,7 +120,7 @@ async def update_event(
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid time format")
 
-    # Handle image upload
+    # Handle image upload safely
     if image_url:
         ext = Path(image_url.filename).suffix
         safe_filename = f"{uuid.uuid4()}{ext}"
@@ -99,3 +136,22 @@ async def update_event(
         event.image_url = f"{BASE_URL}{event.image_url}"
 
     return event
+
+# ---------------------------
+# Delete event (admin only)
+@router.delete("/{event_id}")
+def delete_event(
+    event_id: int,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admin can delete events")
+
+    event = db.query(models.Event).filter(models.Event.id == event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    db.delete(event)
+    db.commit()
+    return {"message": "Event deleted successfully"}
