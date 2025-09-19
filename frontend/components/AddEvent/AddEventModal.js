@@ -1,28 +1,46 @@
 "use client";
 import { useState } from "react";
+import { createEvent } from "../../utils/api"; // ✅ import API helper
 
 export default function AddEventModal({ isOpen, onClose, onSave }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
-  const [image_url, setImageUrl] = useState("");
+  const [imageFile, setImageFile] = useState(null);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSave({
-      title,
-      description,
-      date,
-      time,
-      image_url,
-    });
-    // Reset form
-    setTitle("");
-    setDescription("");
-    setDate("");
-    setTime("");
-    setImageUrl("");
+
+    // Prepare FormData for file upload
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("description", description);
+    formData.append("date", date);
+    formData.append("time", time);
+    if (imageFile) {
+      formData.append("image_url", imageFile); // 🔹 changed to image_url
+    }
+
+    try {
+      // ✅ Use axios wrapper instead of fetch
+      const data = await createEvent(formData);
+      console.log("Event created:", data);
+
+      if (onSave) {
+        onSave(data); // callback to refresh events
+      }
+
+      // Reset form
+      setTitle("");
+      setDescription("");
+      setDate("");
+      setTime("");
+      setImageFile(null);
+      onClose();
+    } catch (error) {
+      console.error("Error creating event:", error);
+    }
   };
 
   if (!isOpen) return null;
@@ -61,11 +79,11 @@ export default function AddEventModal({ isOpen, onClose, onSave }) {
             className="w-full border px-3 py-2 rounded-lg"
             required
           />
+          {/* File Upload */}
           <input
-            type="text"
-            placeholder="Image URL"
-            value={image_url}
-            onChange={(e) => setImageUrl(e.target.value)}
+            type="file"
+            accept="image/*"
+            onChange={(e) => setImageFile(e.target.files[0])}
             className="w-full border px-3 py-2 rounded-lg"
             required
           />

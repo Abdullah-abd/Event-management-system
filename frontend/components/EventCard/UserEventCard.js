@@ -3,7 +3,7 @@ const UserEventCard = ({ event }) => {
     <div className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition transform hover:-translate-y-1">
       {/* Event Image */}
       <img
-        src={event.image || "/events.png"} // fallback to public/events.png
+        src={event.image_url || "/events.png"} // fallback to public/events.png
         alt={event.title || event.name}
         className="w-full h-48 object-cover"
       />
