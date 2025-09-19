@@ -4,10 +4,8 @@ sqlalchemy
 psycopg2-binary
 python-jose
 passlib[bcrypt]
-pydantic
+pydantic==2.7.4
 python-dotenv
-alembic   # optional for migrations
+alembic
 python-multipart
-python-dotenv
-pydantic[email]
 email-validator==2.1.0.post1
