@@ -27,7 +27,7 @@ A full-stack event management system to browse, create, and manage events with e
 
 Use the following credentials to log in as an admin:
 
-- **Email:** admin@admin.com  
+- **Email:** superadmin@example.com  
 - **Password:** 1234567
 
 ## Setup & Installation
